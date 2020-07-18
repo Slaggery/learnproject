@@ -1,7 +1,7 @@
 <template>
     <div id="app">
-        <TodoList/>
-        <AddTodo/>
+        <p><TodoList/></p>
+        <p><AddTodo/></p>
     </div>
 </template>
 

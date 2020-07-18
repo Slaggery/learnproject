@@ -1,50 +1,94 @@
 <template>
     <div>
         <h2>Мои дела: </h2>
-        <ul :key="listKey">
-            <li v-for="(todo, index) in todos" :key="index">
-                <s v-if="!!todo.disabled">{{ todo.text }}</s>
-                <span v-else> {{ todo.text }}</span>
-
-                <button v-on:click="finalTodo(index)" :disabled="!!todo.disabled">Завершить</button>
-                <button v-on:click="deleteTodo(index)">Удалить</button>
-            </li>
-        </ul>
+        <hr>
+        <label class="container">
+            <input type="checkbox" v-model="chkAll" :disabled="disabledCheckBox" v-on:click="checkedAll()">
+            Выбрать всё
+        </label> <br><br>
+        <label>
+            <div v-for="(todo, index) in todoList" v-bind:key="index">
+                <label class="container">
+                    <input type="checkbox" name="chk" v-on:click="chkClick()">
+                    <s v-if="!!todo.disabled">{{ todo.text }}</s>
+                    <span v-else> {{ todo.text }}</span>
+                    <button v-on:click="finalTodo(index)" :disabled="!!todo.disabled">Завершить</button>
+                    <button v-on:click="deleteTodo(index)">Удалить</button>
+                </label>
+            </div>
+        </label> <br>
+        <label>
+            <select id="selectID" :disabled="disabledSelect">
+                <option value="selected">Выберите действия</option>
+                <option value="final">Завершить</option>
+                <option value="delete">Удалить</option>
+            </select>
+            <button v-on:click="applySelected" :disabled="disabledSelect">Применить</button>
+        </label>
+        <hr>
     </div>
 </template>
 
 <script>
-    import EventBus from "@/components/EVENT-bus";
+    import {mapGetters} from 'vuex'
 
     export default {
         name: "TodoList",
         data() {
             return {
-                todos: [],
-                inputTodo: '',
-                listKey: 0,
+                chkAll: false,
+                chk: window.document.getElementsByName('chk'),
+                disableSelect: false
             };
+
         },
         computed: {
-            disableAddButton() {
-                if (this.inputTodo === null) return true
-                return this.inputTodo.length < 1
-            }
+            ...mapGetters([
+                'todoList'
+            ]),
+            disabledCheckBox() {
+                return this.todoList.length === 0
+            },
+            disabledSelect() {
+                return !this.disableSelect
+            },
         },
         methods: {
+            applySelected: function () {
+                let store = this.$store
+                this.chk.forEach(function (item, index) {
+                    if (item.checked) {
+                        store.dispatch('delRow', index)
+                    }
+                })
+            },
+            chkClick: function () {
+                let disableSelect = false
+                for (let i = 0; i < this.chk.length; i++){
+                    if (this.chk[i].checked === true) {
+                        disableSelect = true
+                    }
+                    this.disableSelect = disableSelect
+                }
+                    },
+            checkedAll: function () {
+                let chkAll = !this.chkAll
+                this.chk.forEach(function (item) {
+                    item.checked = chkAll
+                })
+                this.disableSelect = !this.chkAll
+            },
             deleteTodo: function (index) {
-                this.todos.splice(index, 1)
-                this.listKey++
+                console.log('index', index)
+                this.$store.dispatch('delRow', index)
             },
             finalTodo: function (index) {
-                this.todos[index].disabled = true
-                this.listKey++
+                const newRow = Object.assign({}, this.todoList[index])
+                newRow.disabled = true
+                this.todoList.splice(index, 1, newRow)
             },
         },
         mounted() {
-            EventBus.$on('addButton', todo => {
-                this.todos.push({text: todo})
-            });
         }
     }
 </script>
