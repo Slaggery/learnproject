@@ -15,6 +15,7 @@ const store = new Vuex.Store({
     },
     mutations: {
         addRow(state, row) {
+            row.checked = false
             state.todoList.push(row)
         },
         delRow(state, index) {
